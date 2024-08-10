@@ -1,0 +1,106 @@
+{
+    "$schema": "https://schema.management.azure.com/2020-06-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "resources": [
+      {
+        "type": "Microsoft.Web/sites",
+        "apiVersion": "2021-01-01",
+        "name": "[parameters('functionAppName')]",
+        "location": "[parameters('location')]",
+        "kind": "functionapp",
+        "properties": {
+          "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+          "siteConfig": {
+            "appSettings": [
+              {
+                "name": "AzureWebJobsStorage",
+                "value": "[parameters('storageAccountConnectionString')]"
+              },
+              {
+                "name": "FUNCTIONS_EXTENSION_VERSION",
+                "value": "~3"
+              }
+            ]
+          }
+        },
+        "dependsOn": [
+          "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+          "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+        ]
+      },
+      {
+        "type": "Microsoft.Web/serverfarms",
+        "apiVersion": "2021-01-01",
+        "name": "[parameters('hostingPlanName')]",
+        "location": "[parameters('location')]",
+        "sku": {
+          "Tier": "Dynamic",
+          "Name": "Y1"
+        },
+        "kind": "FunctionApp",
+        "properties": {
+          "name": "[parameters('hostingPlanName')]",
+          "location": "[parameters('location')]"
+        }
+      },
+      {
+        "type": "Microsoft.DocumentDB/databaseAccounts",
+        "apiVersion": "2021-04-15",
+        "name": "[parameters('cosmosDBAccountName')]",
+        "location": "[parameters('location')]",
+        "kind": "GlobalDocumentDB",
+        "properties": {
+          "consistencyPolicy": {
+            "defaultConsistencyLevel": "Eventual"
+          },
+          "databaseAccountOfferType": "Standard",
+          "locations": [
+            {
+              "locationName": "[parameters('location')]",
+              "failoverPriority": 0,
+              "isZoneRedundant": false
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "functionAppName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Azure Function App"
+        }
+      },
+      "hostingPlanName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Hosting Plan"
+        }
+      },
+      "storageAccountName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Storage Account"
+        }
+      },
+      "cosmosDBAccountName": {
+        "type": "string",
+        "metadata": {
+          "description": "Name of the Cosmos DB account"
+        }
+      },
+      "location": {
+        "type": "string",
+        "metadata": {
+          "description": "Azure region for all resources"
+        }
+      },
+      "storageAccountConnectionString": {
+        "type": "string",
+        "metadata": {
+          "description": "Connection string for the Azure Storage Account"
+        }
+      }
+    }
+  }
+  
